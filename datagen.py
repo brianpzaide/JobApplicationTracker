@@ -145,8 +145,8 @@ def filter_job_applications(companies: List[str]=None, positions: List[str]=None
 
 
 if __name__ == '__main__':
-    init_db()
-    # generate_data()
+    # init_db()
+    generate_data()
     
     # fetch_notes(152)
     

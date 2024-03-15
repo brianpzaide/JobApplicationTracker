@@ -4,6 +4,9 @@ from tkinter import ttk, scrolledtext
 import ttkbootstrap as tb
 import db
 
+# initialize the database
+db.init_db()
+
 instruction_text = """Click a row in the table above to view job application notes. Right-click to update or add new notes. When you right-click a row, the form below will automatically fill with the corresponding values."""
 
 

@@ -13,6 +13,14 @@ fetch_companies_query = "Select distinct company from job_applications"
 
 JobApplication = namedtuple("JobApplication", "id company position status next_deadline")
 
+def init_db():
+    conn = sqlite3.connect('jbt.db')
+    cur = conn.cursor()
+    with open('schema.sql', 'r') as f:
+        cur.executescript(f.read())
+    conn.commit()
+    conn.close()
+
 def fetch_notes(job_application_id: int)->List[str]:
     conn = sqlite3.connect('jbt.db')
     cur = conn.cursor()
