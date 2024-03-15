@@ -44,7 +44,6 @@ def row_right_click(event):
     
     # check to make sure that a row has been clicked
     if len(item_data) > 0:
-        print('row_right_click', item_data)
         # clear the form
         clear_form()
         # populate the form fields with the just fetched job apllication details
@@ -57,10 +56,7 @@ def row_right_click(event):
         temp = date_deadline.split("-")
         date_deadline = f"{temp[1]}/{temp[2]}/{temp[0]}"
         next_deadline.entry.insert("0", date_deadline)
-        time_entry.insert(END, time_deadline)
-
-    
-    
+        time_entry.insert(END, time_deadline)    
 
 def clear_form():
     """Resets all form fields, clearing any entered data in the Add/Update form.
@@ -163,11 +159,13 @@ def filter_job_applications():
 
     if from_state == 'normal':
         temp = from_date.entry.get().split("/")
-        _from = f"{temp[2]}-{temp[0]}-{temp[1]}"
+        _from = f"{temp[2]}-{temp[0].zfill(2)}-{temp[1].zfill(2)}"
+        print(_from)
         from_date.set_state_disabled()
     if through_state == 'normal':
         temp = to_date.entry.get().split("/")
-        _through = f"{temp[2]}-{temp[0]}-{temp[1]}"
+        _through = f"{temp[2]}-{temp[0].zfill(2)}-{temp[1].zfill(2)}"
+        print(_through)
         to_date.set_state_disabled()
 
     # call db.filter_job_applications to get the filtered results
