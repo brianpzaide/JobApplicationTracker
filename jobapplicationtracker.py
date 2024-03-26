@@ -7,7 +7,14 @@ import db
 # initialize the database
 db.init_db()
 
-instruction_text = """Click a row in the table above to view job application notes. Right-click to update or add new notes. When you right-click a row, the form below will automatically fill with the corresponding values."""
+statusses = ["ready to apply", "applied", "interview scheduled", "rejected", "ghosted", "offered", "signed", "archived"]
+
+company_name_vars = {}
+position_vars = {}
+status_vars = {}
+
+instruction_text = """Click a row in the table above to view job application notes. Right-click to update or add new notes.
+When you right-click a row, the form below will automatically fill with the corresponding values."""
 
 
 def row_left_click(event):
@@ -90,11 +97,14 @@ def add_job_application():
         refresh_table_view()
         # clear the form
         clear_form()
+        populate_company_names_menu()
+        populate_positions_menu()
 
 def update_job_application():
-    """Updates the selected job application. When a row in the table is right-clicked, the fields of the Add/Update form are automatically populated with the corresponding values.
-This function collects information from the Add/Update form and updates the corresponding job application in the database. It retrieves only the 'id', 'status', 'next_deadline', and 'time' fields, leaving the 'company name' and 'position' unchanged, as modifying them has no effect.
-This function is specifically designed to update the status and 'next_deadline' of the job application.
+    """Updates the selected job application. When a row in the table is right-clicked, the fields of the Add/Update form are automatically
+    populated with the corresponding values. This function collects information from the Add/Update form and updates the corresponding job
+    application in the database. It retrieves only the 'id', 'status', 'next_deadline', and 'time' fields, leaving the 'company name' and
+    'position' unchanged, as modifying them has no effect. This function is specifically designed to update the status and 'next_deadline' of the job application.
     """
     # get the values from the fields "id" "status", "next_deadline", "Time"
     jid = id_entry.get()
@@ -114,7 +124,9 @@ This function is specifically designed to update the status and 'next_deadline' 
             clear_form()
 
 def add_note():
-    """Adds a new note for the selected job application into the database. Ensure the 'id' field in the Add/Update form is populated; otherwise, it has no effect (no operation). Right-clicking on the row corresponding to the job application automatically populates the required field.
+    """Adds a new note for the selected job application into the database. Ensure the 'id' field in the Add/Update form is populated; 
+    otherwise, it has no effect (no operation). Right-clicking on the row corresponding to the job application automatically populates 
+    the required field.
     """
     # get the values from the fields "id", "note"
     _id = id_entry.get()
@@ -147,7 +159,8 @@ def refresh_table_view():
     
 
 def filter_job_applications():
-    """Fetches all job applications from the database, applying filters based on company names, positions, status, and alseo date(useful for finding applications due next week or next month etc).  
+    """Fetches all job applications from the database, applying filters based on company names, positions, status, and also
+    date(useful for finding applications due next week or next month etc).  
 
     Returns:
         _type_: _description_
@@ -163,16 +176,46 @@ def filter_job_applications():
     if from_state == 'normal':
         temp = from_date.entry.get().split("/")
         _from = f"{temp[2]}-{temp[0].zfill(2)}-{temp[1].zfill(2)}"
-        print(_from)
         from_date.set_state_disabled()
     if through_state == 'normal':
         temp = to_date.entry.get().split("/")
         _through = f"{temp[2]}-{temp[0].zfill(2)}-{temp[1].zfill(2)}"
-        print(_through)
         to_date.set_state_disabled()
 
-    # call db.filter_job_applications to get the filtered results
     return db.filter_job_applications(_companies, _positions, _statusses, _from.strip(), _through.strip())
+
+def populate_status_menu():
+    global status_vars
+    status_vars = {}
+    status_menu_inside = tb.Menu(status_menu)
+    for _status in statusses:
+        var = tk.BooleanVar()
+        status_vars[_status] = var
+        status_menu_inside.add_checkbutton(label=_status, variable=var)
+    status_menu['menu'] = status_menu_inside
+
+def populate_company_names_menu():
+    global company_name_vars
+    company_name_vars = {}
+    company_name_menu_inside = tb.Menu(company_name_menu)
+    companies = db.fetch_companies()
+    for company in companies:
+        var = tk.BooleanVar()
+        company_name_vars[company] = var
+        company_name_menu_inside.add_checkbutton(label=company, variable=var)
+    company_name_menu['menu'] = company_name_menu_inside
+
+def populate_positions_menu():
+    global position_vars
+    position_vars = {}
+    position_menu_inside = tb.Menu(position_menu)
+    positions = db.fetch_positions()
+    for pos in positions:
+        var = tk.BooleanVar()
+        position_vars[pos] = var
+        position_menu_inside.add_checkbutton(label=pos, variable=var)
+    position_menu['menu'] = position_menu_inside
+
 
 
 root = tb.Window(themename="darkly")
@@ -196,40 +239,20 @@ class CustomDateEntry(tb.DateEntry):
 search_frame = LabelFrame(root, text="Search")
 search_frame.pack(fill="x", padx=10, pady=10)
 
-companies = db.fetch_companies()
+# populating the company_name_menu with all the unique company names currently in the database
 company_name_menu = tb.Menubutton(search_frame, bootstyle="warning", text="Select Company", width=15)
 company_name_menu.grid(row=0, column=0, padx=10, columnspan=2)
-company_name_menu_inside = tb.Menu(company_name_menu)
-company_name_vars = {}
-for company in companies:
-    var = tk.BooleanVar()
-    company_name_vars[company] = var
-    company_name_menu_inside.add_checkbutton(label=company, variable=var)
-company_name_menu['menu'] = company_name_menu_inside
+populate_company_names_menu()
 
 # populating the position_menu with all the unique positions currently in the database
-positions = db.fetch_positions()
 position_menu = tb.Menubutton(search_frame, bootstyle="warning", text="Select Position", width=15)
 position_menu.grid(row=0, column=2, padx=10, columnspan=2)
-position_menu_inside = tb.Menu(position_menu)
-position_vars = {}
-for pos in positions:
-    var = tk.BooleanVar()
-    position_vars[pos] = var
-    position_menu_inside.add_checkbutton(label=pos, variable=var)
-position_menu['menu'] = position_menu_inside
+populate_positions_menu()
 
 # populating the status_menus with the 'statusses'
-statusses = ["ready to apply", "applied", "interview scheduled", "rejected", "ghosted", "offered", "signed", "archived"]
 status_menu = tb.Menubutton(search_frame, bootstyle="warning", text="Select Status", width=15)
 status_menu.grid(row=0, column=4, padx=10, columnspan=2)
-status_menu_inside = tb.Menu(status_menu)
-status_vars = {}
-for _status in statusses:
-    var = tk.BooleanVar()
-    status_vars[_status] = var
-    status_menu_inside.add_checkbutton(label=_status, variable=var)
-status_menu['menu'] = status_menu_inside
+populate_status_menu()
 
 from_date = CustomDateEntry(search_frame, bootstyle="warning", width=15)
 from_date.grid(row=0, column=6, columnspan=2, padx=10)
